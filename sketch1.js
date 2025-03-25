@@ -20,6 +20,7 @@ let sketch1 = function(p) {
         p.background(240);
         p.image(img, 0, 0, p.width, p.height); // Draw map
         drawCountryBubbles();
+        drawLegend();
     };
 
     function storeCountryCoords() {
@@ -49,11 +50,43 @@ let sketch1 = function(p) {
                 let y = p.map(lat, -90, 90, p.height, 0);   // Latitude to Y axis
 
                 // Bubble size based on population
-                let radius = p.map(population, 0, 1500000000, 2, 60); // Adjust the max population
+                let radius = p.map(population, 0, 1.5e9, 3, 75); // Adjust the max population
 
                 // Draw the bubble
                 p.ellipse(x, y, radius * 2, radius * 2);
             }
+        }
+    }
+
+    function drawLegend() {
+        let legendX = 50;
+        let legendY = 550;
+        let populations = [1e7, 1e8, 5e8, 1e9];
+        let labels = ["<10M", "100M", "500M", "1B"];
+        
+        let boxWidth = 150;
+        let boxHeight = 235;
+        
+        p.fill(255, 255, 255, 220);
+        p.stroke(0);
+        p.rect(legendX - 30, legendY - 40, boxWidth, boxHeight, 10);
+    
+        p.fill(0);
+        p.noStroke();
+        p.textAlign(p.LEFT, p.CENTER);
+        p.text("Population Scale", legendX, legendY - 25);
+        
+        let yOffsets = [0, 20, 60, 140];
+        for (let i = 0; i < populations.length; i++) {
+            let radius = p.map(populations[i], 0, 1.5e9, 3, 75);
+            let yOffset = legendY + yOffsets[i];
+            
+            p.fill(255, 0, 0, 150);
+            p.noStroke();
+            p.ellipse(legendX + 30, yOffset, radius * 2, radius * 2);
+            
+            p.fill(0);
+            p.text(labels[i], legendX + 85, yOffset);
         }
     }
 };

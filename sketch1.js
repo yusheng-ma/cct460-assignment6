@@ -49,7 +49,7 @@ let sketch1 = function(p) {
                 let y = p.map(lat, -90, 90, p.height, 0);   // Latitude to Y axis
 
                 // Bubble size based on population
-                let radius = p.map(population, 0, 1000000000, 3, 50); // Adjust the max population
+                let radius = p.map(population, 0, 1500000000, 2, 60); // Adjust the max population
 
                 // Draw the bubble
                 p.ellipse(x, y, radius * 2, radius * 2);

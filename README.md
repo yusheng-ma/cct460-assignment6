@@ -8,6 +8,11 @@ kaggle: https://www.kaggle.com/datasets/iamsouravbanerjee/world-population-datas
 * best way of visualizing this information based on data viz principles
 * limitations of the data/findings, insights and inferences from the data
 
+limit 1: dont know how to cooperate on world map
+- use lib? way too strong
+- use google api way too strong
+- use predefine csv
+
 ## dataset info
 
 地理資訊：

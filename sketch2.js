@@ -1,8 +1,19 @@
 let PopulationData = [];
-let sketch2 = function(p) {
-    let t = 0; // Time variable to control the animation
-    let currentYear = 2020; // Initial year (2020)
+let years = [
+    "1970 Population",
+    "1980 Population",
+    "1990 Population",
+    "2000 Population",
+    "2010 Population",
+    "2015 Population",
+    "2020 Population",
+    "2022 Population"
+];
+let currentYearIndex = 0; // Index to track the current year being displayed
+let nextYearIndex = 1; // The next year to transition to
+let t = 0; // Time variable for animation
 
+let sketch2 = function(p) {
     p.preload = function() {
         p.loadTable("dataset/world_population.csv", "csv", "header", function(table) {
             processPopulationData(table);
@@ -18,14 +29,13 @@ let sketch2 = function(p) {
         p.background(50);
         drawTitle(p);
         drawBarChart(p);
-        
-        // Update the time to animate the transition
-        if (t < 1) {
-            t += 0.01; // Control the speed of the animation (0.01 is the step for each frame)
-        } else {
-            // Reset time and switch the year once the animation is complete
-            t = 0;
-            currentYear = (currentYear === 2020) ? 2022 : 2020; // Toggle between 2020 and 2022
+
+        // Update time for smooth transition between years
+        t += 0.01; // Adjust this value for animation speed
+        if (t >= 1) {
+            t = 0; // Reset time for the next year transition
+            currentYearIndex = nextYearIndex;
+            nextYearIndex = (nextYearIndex + 1) % years.length; // Move to the next year
         }
     };
 
@@ -33,12 +43,15 @@ let sketch2 = function(p) {
         PopulationData = [];
         for (let row of table.rows) {
             let country = row.get("Country/Territory");
-            let population2020 = parseInt(row.get("2020 Population"));
-            let population2022 = parseInt(row.get("2022 Population"));
-            PopulationData.push({ country, population2020, population2022 });
+            let populationData = {};
+            years.forEach(year => {
+                populationData[year] = parseInt(row.get(year));
+            });
+            PopulationData.push({ country, populationData });
         }
 
-        PopulationData.sort((a, b) => b.population2022 - a.population2022);
+        // Sort by the most recent population data (e.g., 2022)
+        PopulationData.sort((a, b) => b.populationData["2022 Population"] - a.populationData["2022 Population"]);
         PopulationData = PopulationData.slice(0, 10); // Top 10 countries
     }
 
@@ -47,15 +60,15 @@ let sketch2 = function(p) {
         p.textAlign(p.CENTER, p.CENTER);
         p.textSize(24);
         p.text("Top 10 Countries by Population", p.width / 2, 40);
-        
+
         // Display the current year
         p.textSize(20);
-        p.text("Year: " + currentYear, p.width / 2, 80);
+        p.text("Year: " + years[currentYearIndex].split(' ')[0], p.width / 2, 80);
     }
 
     function drawBarChart(p) {
         let barWidth = p.width * 0.9 / PopulationData.length;
-        let maxPopulation = Math.max(PopulationData[0].population2020, PopulationData[0].population2022);
+        let maxPopulation = 1.5e9;
 
         p.push();
         p.translate(p.width * 0.05, 0);
@@ -63,20 +76,20 @@ let sketch2 = function(p) {
         // Draw bars for each country
         for (let i = 0; i < PopulationData.length; i++) {
             let country = PopulationData[i].country;
-            let population2020 = PopulationData[i].population2020;
-            let population2022 = PopulationData[i].population2022;
+            let currentPopulation = PopulationData[i].populationData[years[currentYearIndex]];
+            let nextPopulation = PopulationData[i].populationData[years[nextYearIndex]];
 
-            // Interpolate population data from 2020 to 2022 based on time variable 't'
-            let population = p.lerp(population2020, population2022, t);
+            // Interpolate between the two population values
+            let interpolatedPopulation = p.lerp(currentPopulation, nextPopulation, t);
 
             // Map population to bar height
-            let barHeight = p.map(population, 0, maxPopulation, 0, p.height * 0.8);
+            let barHeight = p.map(interpolatedPopulation, 0, maxPopulation, 0, p.height * 0.8);
 
             // Set color based on population size
-            let colorValue = p.map(population, 0, maxPopulation, 100, 255);
+            let colorValue = p.map(interpolatedPopulation, 0, maxPopulation, 100, 255);
             p.fill(colorValue, 150, 255 - colorValue);
             p.rect(i * barWidth, p.height - barHeight, barWidth - 4, barHeight);
-            
+
             // Display country name
             p.fill(255);
             p.textSize(16);

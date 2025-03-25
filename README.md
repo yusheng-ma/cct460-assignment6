@@ -2,6 +2,12 @@
 
 kaggle: https://www.kaggle.com/datasets/iamsouravbanerjee/world-population-dataset
 
+## important
+
+* 100 data points X two variables
+* best way of visualizing this information based on data viz principles
+* limitations of the data/findings, insights and inferences from the data
+
 ## dataset info
 
 地理資訊：

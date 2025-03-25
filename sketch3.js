@@ -7,67 +7,120 @@ let sketch3 = function(p) {
     };
 
     p.setup = function() {
-        let cnv3 = p.createCanvas(1000, 600); // Increased canvas width for a wider chart
+        let cnv3 = p.createCanvas(1000 * 1.2, 600 * 1.2); // Increased canvas width for a wider chart
         cnv3.parent('canvas3');
     };
 
     p.draw = function() {
         p.background(50);
         drawTitle(p);
-        drawBarChart(p);
+        drawScatterPlot(p);
     };
 
     function processCountryData(table) {
         countryData = [];
         for (let row of table.rows) {
             let country = row.get("Country/Territory");
-            let population = parseInt(row.get("2022 Population"));
-            countryData.push({ country, population });
+            let density = parseFloat(row.get("Density (per km²)"));
+            let area = parseFloat(row.get("Area (km²)"));
+            if (!isNaN(density) && !isNaN(area)) { // Ensure valid data
+                countryData.push({ country, density, area });
+            }
         }
-
-        // Sort country data by population from highest to lowest
-        countryData.sort((a, b) => b.population - a.population);
-
-        // Get only the top 5 countries
-        countryData = countryData.slice(0, 10);
     }
 
     function drawTitle(p) {
         p.fill(255);
         p.textAlign(p.CENTER, p.CENTER);
         p.textSize(24);
-        p.text("Top 10 Countries by Population (2022)", p.width / 2, 40);
+        p.text("Countries by Population Density vs. Area (2022)", p.width / 2, 40);
     }
 
-    function drawBarChart(p) {
-        let barWidth = p.width * 0.9 / countryData.length; // Adjusted to make bars wider
-        let maxPopulation = countryData[0].population;
-
+    function drawScatterPlot(p) {
+        let maxArea = Math.max(...countryData.map(c => c.area));
+        let maxDensity = Math.max(...countryData.map(c => c.density));
+        
+        // Apply a logarithmic scale for area and density to compress the values
+        let logMaxArea = Math.log(maxArea); // Log scale for area
+        let logMaxDensity = Math.log(maxDensity); // Log scale for density
+        
         p.push();
-        p.translate(p.width * 0.05, 0); // Adjust the left margin for better spacing
+        p.translate(p.width * 0.05, p.height * 0.1); // Adjust position for better spacing
+        
+        let xAxisLength = p.width * 0.9; // Horizontal axis space
+        let yAxisLength = p.height * 0.8; // Vertical axis space
+        
+        // Draw axes
+        p.stroke(255);
+        p.line(0, yAxisLength, xAxisLength, yAxisLength); // X-axis
+        p.line(0, 0, 0, yAxisLength); // Y-axis
+        
+        // Label axes
+        p.fill(255);
+        p.textSize(16);
+        p.textAlign(p.CENTER, p.CENTER);
+        
+        // "Area" label stays horizontal
+        p.text("Area (log scale)", xAxisLength / 2, yAxisLength + 40);
 
-        // Draw bars for each country
+        // "Population Density" label rotated
+        p.push();
+        p.translate(-40, yAxisLength / 2); // Adjust position for vertical text
+        p.rotate(-Math.PI / 2); // Rotate 90 degrees counterclockwise
+        p.text("Population Density (log scale)", -60, 20);
+        p.pop();
+    
+        // Draw values on X-axis
+        let xTicks = [1, 10, 100, 1000, 10000, 100000, 1000000, 10000000]; // Log scale ticks for area
+        for (let i = 0; i < xTicks.length; i++) {
+            let xPosition = p.map(Math.log(xTicks[i]), 0, logMaxArea, 0, xAxisLength);
+            p.fill(255);
+            p.textSize(12);
+            p.text(xTicks[i], xPosition, yAxisLength + 20); // Place the label below the axis
+        }
+    
+        // Draw values on Y-axis
+        let yTicks = [1, 10, 100, 1000, 10000]; // Log scale ticks for density
+        for (let i = 0; i < yTicks.length; i++) {
+            let yPosition = p.map(Math.log(yTicks[i]), 0, logMaxDensity, yAxisLength, 0);
+            p.push();
+            p.translate(-40, yPosition); // Translate to Y-axis label position
+            p.rotate(-Math.PI / 2); // Rotate 90 degrees counterclockwise
+            p.fill(255);
+            p.textSize(12);
+            p.text(yTicks[i], 0, 0); // Place the label at the new position
+            p.pop();
+        }
+    
+        // Draw points for each country
         for (let i = 0; i < countryData.length; i++) {
             let country = countryData[i].country;
-            let population = countryData[i].population;
+            let density = countryData[i].density;
+            let area = countryData[i].area;
 
-            // Use linear scale for population for bar height
-            let barHeight = p.map(population, 0, maxPopulation, 0, p.height * 0.8);
+            // Apply log transformation to area and density
+            let logArea = Math.log(area);
+            let logDensity = Math.log(density);
 
-            // Set color based on population size
-            let colorValue = p.map(population, 0, maxPopulation, 100, 255);
+            // Map the log-transformed area and density to fit within the canvas
+            let x = p.map(logArea, 0, logMaxArea, 0, xAxisLength);
+            let y = p.map(logDensity, 0, logMaxDensity, yAxisLength, 0);
+    
+            // Set color based on density for visual distinction
+            let colorValue = p.map(density, 0, maxDensity, 100, 255);
             p.fill(colorValue, 150, 255 - colorValue);
-            p.rect(i * barWidth, p.height - barHeight, barWidth - 4, barHeight); // Add spacing between bars
-            
+            p.noStroke();
+            p.ellipse(x, y, 10, 10); // Draw circle for each country
+        
             // Display country name
             p.fill(255);
-            p.textSize(16);
+            p.textSize(12);
             p.textAlign(p.CENTER, p.BOTTOM);
-            p.text(country, i * barWidth + barWidth / 2, p.height - barHeight - 5);
+            p.text(country, x, y - 5);
         }
-
+        
         p.pop();
-    }
+    }    
 };
 
 new p5(sketch3);

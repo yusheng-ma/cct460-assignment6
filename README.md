@@ -13,6 +13,12 @@ limit 1: dont know how to cooperate on world map
 - use google api way too strong
 - use predefine csv
 
+散佈圖：
+
+如果資料不僅包含人口密度，還有其他變數（例如 GDP、面積等），你可以使用散佈圖來顯示不同國家之間的關係。例如，將國家的面積放在 X 軸，人口密度放在 Y 軸，來分析面積與密度的關聯性。
+
+工具/庫：matplotlib 或 seaborn 都能輕鬆實現這種視覺化。
+
 ## dataset info
 
 地理資訊：

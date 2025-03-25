@@ -144,10 +144,25 @@ let sketch4 = function(p) {
             p.textSize(16);
             p.textAlign(p.CENTER, p.BOTTOM);
             p.text(country, i * barWidth + barWidth / 2, p.height - barHeight - 5);
+
+            // Display population under the country name
+            p.textAlign(p.CENTER, p.TOP);
+            p.text(formatPopulation(currentPopulation), i * barWidth + barWidth / 2, p.height - barHeight + 20);
         }
 
         p.pop();
     }
+
+    function formatPopulation(num) {
+        if (num >= 1e9) {
+            return (num / 1e9).toFixed(2) + "B";
+        } else if (num >= 1e6) {
+            return (num / 1e6).toFixed(2) + "M";
+        } else if (num >= 1e3) {
+            return (num / 1e3).toFixed(2) + "K";
+        }
+        return num.toString();
+    }    
 };
 
 new p5(sketch4); 

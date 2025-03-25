@@ -12,6 +12,7 @@ let years = [
 let currentYearIndex = 0; // Index to track the current year being displayed
 let nextYearIndex = 1; // The next year to transition to
 let t = 0; // Time variable for animation
+let topCountries = [];
 
 let sketch2 = function(p) {
     p.preload = function() {
@@ -36,23 +37,29 @@ let sketch2 = function(p) {
             t = 0; // Reset time for the next year transition
             currentYearIndex = nextYearIndex;
             nextYearIndex = (nextYearIndex + 1) % years.length; // Move to the next year
+            processPopulationData(table); // Reprocess data for the next year
         }
     };
 
     function processPopulationData(table) {
-        PopulationData = [];
+        let allCountries = [];
         for (let row of table.rows) {
             let country = row.get("Country/Territory");
             let populationData = {};
             years.forEach(year => {
                 populationData[year] = parseInt(row.get(year));
             });
-            PopulationData.push({ country, populationData });
+            allCountries.push({ country, populationData });
         }
 
-        // Sort by the most recent population data (e.g., 2022)
-        PopulationData.sort((a, b) => b.populationData["2022 Population"] - a.populationData["2022 Population"]);
-        PopulationData = PopulationData.slice(0, 10); // Top 10 countries
+        // Sort countries by current year's population
+        allCountries.sort((a, b) => b.populationData[years[currentYearIndex]] - a.populationData[years[currentYearIndex]]);
+        topCountries = allCountries.slice(0, 10); // Get the top 10 countries for the current year
+
+        // Ensure we have exactly 10 countries, adding placeholders if necessary
+        while (topCountries.length < 10) {
+            topCountries.push({ country: "", populationData: {} });
+        }
     }
 
     function drawTitle(p) {
@@ -67,17 +74,17 @@ let sketch2 = function(p) {
     }
 
     function drawBarChart(p) {
-        let barWidth = p.width * 0.9 / PopulationData.length;
+        let barWidth = p.width * 0.9 / topCountries.length;
         let maxPopulation = 1.5e9;
 
         p.push();
         p.translate(p.width * 0.05, 0);
 
-        // Draw bars for each country
-        for (let i = 0; i < PopulationData.length; i++) {
-            let country = PopulationData[i].country;
-            let currentPopulation = PopulationData[i].populationData[years[currentYearIndex]];
-            let nextPopulation = PopulationData[i].populationData[years[nextYearIndex]];
+        // Draw bars for each country in the current top 10
+        for (let i = 0; i < topCountries.length; i++) {
+            let country = topCountries[i].country;
+            let currentPopulation = topCountries[i].populationData[years[currentYearIndex]];
+            let nextPopulation = topCountries[i].populationData[years[nextYearIndex]];
 
             // Interpolate between the two population values
             let interpolatedPopulation = p.lerp(currentPopulation, nextPopulation, t);

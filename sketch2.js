@@ -1,91 +1,71 @@
-let populationData = {};
-let totalPopulation = 0;
-let angles = [];
-let continents = [];
-
+let PopulationData = [];
 let sketch2 = function(p) {
     p.preload = function() {
         p.loadTable("dataset/world_population.csv", "csv", "header", function(table) {
             processPopulationData(table);
         });
     };
-    
+
     p.setup = function() {
-        let cnv2 = p.createCanvas(800, 600);
+        let cnv2 = p.createCanvas(1000, 600); // Increased canvas width for a wider chart
         cnv2.parent('canvas2');
     };
-    
+
     p.draw = function() {
         p.background(50);
         drawTitle(p);
-        drawPieChart(p);
+        drawBarChart(p);
     };
 
     function processPopulationData(table) {
+        PopulationData = [];
         for (let row of table.rows) {
-            let continent = row.get("Continent");
+            let country = row.get("Country/Territory");
             let population = parseInt(row.get("2022 Population"));
-            if (!populationData[continent]) {
-                populationData[continent] = 0;
-            }
-            populationData[continent] += population;
+            PopulationData.push({ country, population });
         }
-        totalPopulation = Object.values(populationData).reduce((a, b) => a + b, 0);
-        continents = Object.keys(populationData);
-        let startAngle = 0;
-        for (let continent of continents) {
-            let angle = (populationData[continent] / totalPopulation) * p.TWO_PI;
-            angles.push({ start: startAngle, stop: startAngle + angle, continent, percent: (populationData[continent] / totalPopulation * 100).toFixed(1) + "%" });
-            startAngle += angle;
-        }
+
+        // Sort country data by population from highest to lowest
+        PopulationData.sort((a, b) => b.population - a.population);
+
+        // Get only the top 5 countries
+        PopulationData = PopulationData.slice(0, 10);
     }
-    
+
     function drawTitle(p) {
         p.fill(255);
         p.textAlign(p.CENTER, p.CENTER);
         p.textSize(24);
-        p.text("2022 Population Distribution by Continent", p.width / 2, 40);
+        p.text("Top 10 Countries by Population (2022)", p.width / 2, 40);
     }
-    
-    function drawPieChart(p) {
+
+    function drawBarChart(p) {
+        let barWidth = p.width * 0.9 / PopulationData.length; // Adjusted to make bars wider
+        let maxPopulation = PopulationData[0].population;
+
         p.push();
-        p.translate(p.width / 2, p.height / 2);
-        let radius = 200;
-        let colors = ["#ff9999", "#66b3ff", "#99ff99", "#ffcc99", "#c2c2f0", "#ffb3e6"];
-        
-        for (let i = 0; i < angles.length; i++) {
-            p.fill(colors[i % colors.length]);
-            p.arc(0, 0, radius * 2, radius * 2, angles[i].start, angles[i].stop, p.PIE);
+        p.translate(p.width * 0.05, 0); // Adjust the left margin for better spacing
+
+        // Draw bars for each country
+        for (let i = 0; i < PopulationData.length; i++) {
+            let country = PopulationData[i].country;
+            let population = PopulationData[i].population;
+
+            // Use linear scale for population for bar height
+            let barHeight = p.map(population, 0, maxPopulation, 0, p.height * 0.8);
+
+            // Set color based on population size
+            let colorValue = p.map(population, 0, maxPopulation, 100, 255);
+            p.fill(colorValue, 150, 255 - colorValue);
+            p.rect(i * barWidth, p.height - barHeight, barWidth - 4, barHeight); // Add spacing between bars
             
-            let midAngle = (angles[i].start + angles[i].stop) / 2;
-            let labelX = radius * 0.6 * p.cos(midAngle); // Inside for percentage
-            let labelY = radius * 0.6 * p.sin(midAngle); // Inside for percentage
-            
-            // Set continent name radius based on continent
-            let continentRadius = 1.0;
-            if (angles[i].continent === "Asia" || angles[i].continent === "Africa") {
-                continentRadius = 1.1;  // Asia and Africa
-            } else if (angles[i].continent === "Europe" || angles[i].continent === "Oceania") {
-                continentRadius = 1.15; // Europe and Oceania
-            } else if (angles[i].continent === "North America") {
-                continentRadius = 1.3; // North America and South America
-            } else if (angles[i].continent === "South America") {
-                continentRadius = 1.35; 
-            }
-            
-            let continentX = radius * continentRadius * p.cos(midAngle); // Outside for continent name
-            let continentY = radius * continentRadius * p.sin(midAngle); // Outside for continent name
-            
-            // Draw percentage inside the pie chart
+            // Display country name
             p.fill(255);
-            p.textSize(22);
-            p.textAlign(p.CENTER, p.CENTER);
-            p.text(angles[i].percent, labelX, labelY);
-            
-            // Draw continent name outside the pie chart with custom radius
-            p.textSize(22);
-            p.text(angles[i].continent, continentX, continentY);
+            p.textSize(16);
+            p.textAlign(p.CENTER, p.BOTTOM);
+            p.text(country, i * barWidth + barWidth / 2, p.height - barHeight - 5);
         }
+
         p.pop();
     }
 };

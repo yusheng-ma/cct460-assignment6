@@ -115,7 +115,7 @@ let sketch4 = function(p) {
         // Display the current year
         let currentYearIndex = Math.floor(tick);
         p.textSize(20);
-        p.text("Year: " + years[currentYearIndex].split(' ')[0], p.width / 2, 80);
+        p.text("Year: " + allYears[currentYearIndex].split(' ')[0], p.width / 2, 80);
     }
 
     function drawBarChart(p) {

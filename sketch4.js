@@ -126,6 +126,22 @@ let sketch4 = function(p) {
         p.push();
         p.translate(p.width * 0.05, 0);
 
+        // Define guide lines and labels at key population levels
+        let guideLines = [1.5e9, 1e9, 500e6, 100e6]; // 1B, 500M, 100M
+        p.stroke(200); // Light gray for lines
+        p.strokeWeight(1);
+        p.textSize(14);
+        p.fill(255); // White text
+
+        for (let value of guideLines) {
+            let y = p.map(value, 0, maxPopulation, p.height, p.height * 0.2); // Scale y position
+            p.line(0, y, p.width * 0.9, y); // Draw horizontal line
+    
+            // Label the guide line
+            p.textAlign(p.RIGHT, p.CENTER);
+            p.text(formatPopulation(value), -10, y); // Place text slightly to the left
+        }
+    
         // Draw bars for each country in the current top 10
         for (let i = 0; i < drawData.length; i++) {
             let country = drawData[i].country;
@@ -157,9 +173,9 @@ let sketch4 = function(p) {
         if (num >= 1e9) {
             return (num / 1e9).toFixed(2) + "B";
         } else if (num >= 1e6) {
-            return (num / 1e6).toFixed(2) + "M";
+            return (num / 1e6).toFixed(0) + "M";
         } else if (num >= 1e3) {
-            return (num / 1e3).toFixed(2) + "K";
+            return (num / 1e3).toFixed(0) + "K";
         }
         return num.toString();
     }    
